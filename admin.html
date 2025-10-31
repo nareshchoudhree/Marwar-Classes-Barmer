@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marwar - Admin Dashboard</title>
+    <link rel="icon" href="https://cdn-diy-public.classplus.co/prod/IMG7475_1759811563974.JPG" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase v8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #4f46e5;
+            --secondary: #7c3aed;
+            --accent: #06b6d4;
+            --dark: 1e293b;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            scroll-behavior: smooth;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.95) 0%, rgba(124, 58, 237, 0.85) 100%);
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.25);
+        }
+
+        .table-container {
+            max-height: calc(100vh - 200px);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            min-width: 300px;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 9999;
+        }
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+
+        .checkbox-cell {
+            width: 50px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 p-6">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md card-hover">
+            <div class="text-center mb-8">
+                <img src="marwarlogo.png" 
+                     alt="Marwar Logo" 
+                     class="w-20 h-20 mx-auto mb-6 object-contain rounded-full shadow-lg">
+                <h2 class="text-3xl font-bold text-indigo-900">Admin Login</h2>
+                <p class="text-gray-600 mt-2">Enter your credentials to access dashboard</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="email" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition">
+                </div>
+                <button type="submit" id="loginBtn"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white py-3 rounded-xl font-semibold transition flex items-center justify-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Login
+                </button>
+                <p id="loginError" class="text-red-500 text-sm text-center mt-4 hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="flex h-screen hidden">
+        <!-- Sidebar -->
+        <div class="hero-gradient text-white w-64 flex-shrink-0">
+            <div class="p-4 flex items-center space-x-2 border-b border-indigo-400/50">
+                <img src="marwarlogo.png" alt="Marwar Logo" class="w-8 h-8 mr-2 object-contain">
+                <span class="text-xl font-bold">Marwar Admin</span>
+            </div>
+            <nav class="p-4 space-y-2">
+                <a href="#" class="nav-link active flex items-center space-x-3 py-3 px-4 bg-white/10 rounded-xl hover:bg-white/20">
+                    <i class="fas fa-home text-xl"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="index.html" class="nav-link flex items-center space-x-3 py-3 px-4 text-indigo-100 hover:bg-white/20 rounded-xl">
+                    <i class="fas fa-user-plus text-xl"></i>
+                    <span>Student Registration</span>
+                </a>
+                <a href="#" id="logoutBtn" class="nav-link flex items-center space-x-3 py-3 px-4 text-indigo-100 hover:bg-white/20 rounded-xl">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <header class="bg-white/95 backdrop-blur-md shadow-lg p-4 sticky top-0 z-10">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-indigo-900">Student Records</h1>
+                    <div class="flex items-center space-x-3">
+                        <button id="selectAllBtn" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-lg font-medium text-sm transition">
+                            <i class="fas fa-check-square mr-1"></i> Select All
+                        </button>
+                        <button id="bulkDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition opacity-0 pointer-events-none" disabled>
+                            <i class="fas fa-trash mr-1"></i> Delete Selected (<span id="selectedCount">0</span>)
+                        </button>
+                        <button id="exportBtn" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-6 py-3 rounded-xl font-medium flex items-center transition">
+                            <i class="fas fa-download mr-2"></i> Export to Excel
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="p-6">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h2 id="studentsHeader" class="text-2xl font-semibold text-indigo-900">All Registered Students</h2>
+                        <div class="relative">
+                            <select id="batchFilter" class="appearance-none bg-white border-2 border-gray-200 rounded-xl px-6 py-3 pr-10 focus:border-indigo-500 focus:outline-none font-medium">
+                                <option value="all">All Courses</option>
+                                <option value="CET">CET - Common Entrance Test</option>
+                                <option value="BSTC">BSTC - Basic School Teaching Certificate</option>
+                                <option value="LDC">LDC - Lower Division Clerk</option>
+                                <option value="PTET">PTET - Pre Teacher Education Test</option>
+                                <option value="REET">REET - Rajasthan Eligibility Examination for Teachers</option>
+                                <option value="All">All SUBJECT(Foundation Batch)</option>
+                                <option value="GEOGRAPHY">Special Geography Batch</option>
+                                <option value="2ndGrade">2nd Grade</option>
+                                <option value="PTI">PTI - Physical Teacher</option>
+                                <option value="1stGradeGeo">1st Grade Geography</option>
+                                <option value="LAB">Lab Assistant Geography</option>
+                                <option value="HighCourt">High Court 4th Grade</option>
+                                <option value="1stGradeGK">1st Grade First Paper - GK</option>
+                                <option value="4thGrade">4th Grade Exam</option>
+                                <option value="VDO">VDO - Village Development Officer</option>
+                                <option value="PATWARI">Patwari</option>
+                                <option value="DelhiPolice">Delhi Police</option>
+                                <option value="RAJ-POLICE">Rajasthan Police</option>
+                                <option value="RAILWAY">RAILWAY GROUP D</option>
+                                <option value="RPF">RAILWAY RPF</option>
+                                <option value="SSCGD">SCC GD</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto table-container">
+                        <table class="min-w-full divide-y divide-gray-100">
+                            <thead class="bg-indigo-50">
+                                <tr>
+                                    <th class="checkbox-cell px-6 py-4 text-center text-sm font-semibold text-indigo-900 uppercase tracking-wider">
+                                        <input type="checkbox" id="selectAllHeader" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                                    </th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-indigo-900 uppercase tracking-wider">Name</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-indigo-900 uppercase tracking-wider">Father's Name</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-indigo-900 uppercase tracking-wider">Mobile</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-indigo-900 uppercase tracking-wider">Course</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-indigo-900 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-indigo-900 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTable" class="bg-white divide-y divide-gray-100">
+                                <!-- Data inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDohmr8V0NWoIr1VDH0thIM_-dtOHWgVKc",
+            authDomain: "marwar-bmr.firebaseapp.com",
+            projectId: "marwar-bmr",
+            storageBucket: "marwar-bmr.firebasestorage.app",
+            messagingSenderId: "35705137468",
+            appId: "1:35705137468:web:1fd698f50e45b71548d639",
+            measurementId: "G-QP0JMK9Z48"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let allStudentsData = [];
+        let filteredData = [];
+        let currentBatch = 'all';
+        let selectedIds = new Set();
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const batchFilter = document.getElementById('batchFilter');
+        const studentsTable = document.getElementById('studentsTable');
+        const studentsHeader = document.getElementById('studentsHeader');
+        const exportBtn = document.getElementById('exportBtn');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        const selectAllHeader = document.getElementById('selectAllHeader');
+        const toast = document.getElementById('toast');
+
+        // Auth Observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loginScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                loadAllStudentsOnce();
+            } else {
+                loginScreen.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+            }
+        });
+
+        // Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            loginError.classList.add('hidden');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Logging in...';
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                loginError.textContent = error.message;
+                loginError.classList.remove('hidden');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Login';
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', async () => {
+            await auth.signOut();
+        });
+
+        // Load ALL students once
+        async function loadAllStudentsOnce() {
+            studentsTable.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading all students...</td></tr>';
+
+            try {
+                const snapshot = await db.collection('students').get();
+
+                allStudentsData = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleDateString('en-IN') : 'N/A';
+                    allStudentsData.push({ 
+                        id: doc.id, 
+                        ...data, 
+                        date 
+                    });
+                });
+
+                allStudentsData.sort((a, b) => {
+                    const dateA = a.timestamp?.toMillis() || 0;
+                    const dateB = b.timestamp?.toMillis() || 0;
+                    return dateB - dateA;
+                });
+
+                applyFilter('all');
+            } catch (err) {
+                console.error('Load error:', err);
+                studentsTable.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-600">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Failed to load data: ${err.message}
+                </td></tr>`;
+            }
+        }
+
+        // Apply filter
+        function applyFilter(batch) {
+            currentBatch = batch;
+            filteredData = batch === 'all' ? allStudentsData : allStudentsData.filter(s => s.batch === batch);
+            selectedIds.clear();
+            renderTable();
+            updateHeader();
+            updateBulkDeleteBtn();
+        }
+
+        // Render table with checkboxes
+        function renderTable() {
+            studentsTable.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                studentsTable.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No students found for this course.</td></tr>';
+                return;
+            }
+
+            filteredData.forEach(s => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-indigo-50 transition';
+                row.innerHTML = `
+                    <td class="checkbox-cell px-6 py-4">
+                        <input type="checkbox" data-id="${s.id}" class="row-checkbox w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900">${s.name || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${s.fatherName || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${s.mobile || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${getBatchColor(s.batch)}">
+                            ${s.batch || 'N/A'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${s.date}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <button onclick="deleteSingle('${s.id}')" 
+                                class="text-red-600 hover:text-red-800 font-medium text-sm transition">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                studentsTable.appendChild(row);
+            });
+
+            // Re-attach checkbox listeners
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const id = cb.getAttribute('data-id');
+                    if (cb.checked) selectedIds.add(id);
+                    else selectedIds.delete(id);
+                    updateBulkDeleteBtn();
+                });
+            });
+        }
+
+        // Update header
+        function updateHeader() {
+            const option = batchFilter.options[batchFilter.selectedIndex];
+            const courseName = option.text;
+            const count = filteredData.length;
+            studentsHeader.textContent = `${count} Student${count !== 1 ? 's' : ''} - ${courseName}`;
+        }
+
+        // Update Bulk Delete Button
+        function updateBulkDeleteBtn() {
+            const count = selectedIds.size;
+            selectedCount.textContent = count;
+            if (count > 0) {
+                bulkDeleteBtn.classList.remove('opacity-0', 'pointer-events-none');
+                bulkDeleteBtn.disabled = false;
+            } else {
+                bulkDeleteBtn.classList.add('opacity-0', 'pointer-events-none');
+                bulkDeleteBtn.disabled = true;
+            }
+        }
+
+        // Select All
+        selectAllBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => {
+                if (!cb.checked) {
+                    cb.checked = true;
+                    selectedIds.add(cb.getAttribute('data-id'));
+                }
+            });
+            updateBulkDeleteBtn();
+        });
+
+        selectAllHeader.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            if (e.target.checked) {
+                filteredData.forEach(s => selectedIds.add(s.id));
+            } else {
+                selectedIds.clear();
+            }
+            updateBulkDeleteBtn();
+        });
+
+        // Single Delete
+        window.deleteSingle = async function(id) {
+            if (!confirm('Delete this student?')) return;
+
+            try {
+                await db.collection('students').doc(id).delete();
+                allStudentsData = allStudentsData.filter(s => s.id !== id);
+                selectedIds.delete(id);
+                applyFilter(currentBatch);
+                showToast('Student deleted.', 'success');
+            } catch (err) {
+                showToast('Failed to delete.', 'error');
+            }
+        };
+
+        // Bulk Delete
+        bulkDeleteBtn.addEventListener('click', async () => {
+            if (!confirm(`Delete ${selectedIds.size} student(s)?`)) return;
+
+            bulkDeleteBtn.disabled = true;
+            bulkDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Deleting...';
+
+            try {
+                const batch = db.batch();
+                selectedIds.forEach(id => {
+                    batch.delete(db.collection('students').doc(id));
+                });
+                await batch.commit();
+
+                allStudentsData = allStudentsData.filter(s => !selectedIds.has(s.id));
+                selectedIds.clear();
+                applyFilter(currentBatch);
+                showToast(`${selectedIds.size} students deleted.`, 'success');
+            } catch (err) {
+                showToast('Bulk delete failed.', 'error');
+            } finally {
+                bulkDeleteBtn.disabled = false;
+                bulkDeleteBtn.innerHTML = `<i class="fas fa-trash mr-1"></i> Delete Selected (<span id="selectedCount">0</span>)`;
+                updateBulkDeleteBtn();
+            }
+        });
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Batch Colors
+        function getBatchColor(batch) {
+            const colors = {
+                'CET': 'bg-blue-100 text-blue-800',
+                'BSTC': 'bg-emerald-100 text-emerald-800',
+                'REET': 'bg-pink-100 text-pink-800',
+                'PTET': 'bg-purple-100 text-purple-800',
+                'LDC': 'bg-yellow-100 text-yellow-800',
+                'All': 'bg-slate-100 text-slate-800',
+                'GEOGRAPHY': 'bg-teal-100 text-teal-800',
+                '2ndGrade': 'bg-orange-100 text-orange-800',
+                'PTI': 'bg-rose-100 text-rose-800',
+                '1stGradeGeo': 'bg-indigo-100 text-indigo-800',
+                'LAB': 'bg-cyan-100 text-cyan-800',
+                'HighCourt': 'bg-amber-100 text-amber-800',
+                '1stGradeGK': 'bg-violet-100 text-violet-800',
+                '4thGrade': 'bg-lime-100 text-lime-800',
+                'VDO': 'bg-fuchsia-100 text-fuchsia-800',
+                'PATWARI': 'bg-sky-100 text-sky-800',
+                'DelhiPolice': 'bg-red-100 text-red-800',
+                'RAJ-POLICE': 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-900'
+                
+            };
+            return colors[batch] || 'bg-gray-100 text-gray-800';
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            if (!filteredData.length) {
+                showToast('No students to export.', 'error');
+                return;
+            }
+
+            const courseName = currentBatch === 'all' ? 'All_Courses' : currentBatch.replace(/[^a-zA-Z0-9]/g, '_');
+            const today = new Date().toISOString().split('T')[0];
+
+            const exportData = filteredData.map(s => ({
+                Name: s.name || '',
+                "Father's Name": s.fatherName || '',
+                Mobile: s.mobile || '',
+                Course: s.batch || '',
+                Date: s.date || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Students");
+            XLSX.writeFile(wb, `Marwar_${courseName}_Students_${today}.xlsx`);
+            showToast('Exported successfully!', 'success');
+        }
+
+        // Event Listeners
+        batchFilter.addEventListener('change', (e) => applyFilter(e.target.value));
+        exportBtn.addEventListener('click', exportToExcel);
+    </script>
+</body>
+</html>

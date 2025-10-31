@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARWAR Classes Barmer- Student Registration</title>
+    <link rel="icon" href="marwarlogo.png" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #4f46e5; /* Indigo for education */
+            --secondary: #7c3aed; /* Violet accent */
+            --accent: #06b6d4; /* Cyan highlights */
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.95) 0%, rgba(124, 58, 237, 0.85) 100%);
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.25);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .floating {
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        .form-input {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-image {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+                              url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');
+            height: 100vh;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+        }
+
+        .stats-counter {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        @keyframes countUp {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .batch-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid rgba(79, 70, 229, 0.1);
+        }
+
+        .batch-card:hover {
+            border-color: var(--primary);
+        }
+
+        .success-animation {
+            animation: successPulse 0.6s ease-in-out;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-image { height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-indigo-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center">
+                    <div class="flex items-center">
+                       <img src="marwarlogo.png" 
+                            alt="Marwar Logo" 
+                            class="w-8 h-8 mr-2 object-contain">
+
+                        <span class="text-xl font-bold text-indigo-900">MARWAR CLASSES BARMER </span>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-center space-x-8">
+                        <a href="#home" class="nav-link active text-indigo-900 px-3 py-2 text-sm font-semibold">Home</a>
+                        <a href="#app" class="nav-link text-gray-700 hover:text-indigo-900 px-3 py-2 text-sm font-medium">Download App</a>
+                        <a href="https://gchwnh.courses.store/?mainCategory=0&subCatList=[]&filterId=1&sortId=7" class="nav-link text-gray-700 hover:text-indigo-900 px-3 py-2 text-sm font-medium">Courses</a>
+                        <a href="#register" class="nav-link text-gray-700 hover:text-indigo-900 px-3 py-2 text-sm font-medium">Register</a>
+                        <a href="#contact" class="nav-link text-gray-700 hover:text-indigo-900 px-3 py-2 text-sm font-medium">Contact</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="admin.html" class="hidden md:block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                        <i class="fas fa-user-shield mr-2"></i>Admin
+                    </a>
+                    <button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-indigo-900">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#home" class="block px-3 py-3 text-base font-medium text-indigo-900 border-l-4 border-indigo-500">Home</a>
+                <a href="#app" class="block px-3 py-3 text-base font-medium text-gray-700 hover:text-indigo-900 hover:border-l-4 hover:border-indigo-500">Download App</a>
+                <a href="https://gchwnh.courses.store/?mainCategory=0&subCatList=[]&filterId=1&sortId=7" class="block px-3 py-3 text-base font-medium text-gray-700 hover:text-indigo-900 hover:border-l-4 hover:border-indigo-500">Courses</a>
+                <a href="#register" class="block px-3 py-3 text-base font-medium text-gray-700 hover:text-indigo-900 hover:border-l-4 hover:border-indigo-500">Register</a>
+                <a href="#contact" class="block px-3 py-3 text-base font-medium text-gray-700 hover:text-indigo-900 hover:border-l-4 hover:border-indigo-500">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+<section id="home" class="hero-gradient text-white relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div class="md:flex md:items-center md:justify-between">
+            <!-- Text Content -->
+            <div class="md:w-1/2 mb-10 md:mb-0 fade-in-up text-center md:text-left">
+                <h1 class="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                    <span class="gradient-text">मेहनत ही </span><br>
+                    <span class="text-white">सफलता की कुंजी है !</span>
+                </h1>
+                <p class="text-xl mb-8 opacity-90 max-w-lg mx-auto md:mx-0">
+                    Join our expert coaching programs and unlock your full potential for competitive exams
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="#register" class="bg-white hover:bg-indigo-50 text-indigo-900 font-bold px-8 py-4 rounded-xl transition duration-300 inline-flex items-center justify-center">
+                        <i class="fas fa-user-plus mr-2"></i>Register Now
+                    </a>
+                    <a href="https://gchwnh.courses.store/?mainCategory=0&subCatList=[]&filterId=1&sortId=7" class="border-2 border-white hover:bg-white hover:text-indigo-900 font-semibold px-8 py-4 rounded-xl transition duration-300 inline-flex items-center justify-center">
+                        <i class="fas fa-book mr-2"></i>View Courses
+                    </a>
+                    <a href="#app" class="bg-white hover:bg-indigo-50 text-indigo-900 font-bold px-8 py-4 rounded-xl transition duration-300 inline-flex items-center justify-center">
+                        <i class="fas fa-mobile-alt mr-2"></i>Download App
+                    </a>
+                </div>
+            </div>
+
+            <!-- Centered Image -->
+            <div class="md:w-1/4 flex justify-center items-center">
+                <div class="w-full max-w-sm md:max-w-md lg:max-w-lg">
+                    <img src="app png.png" 
+                         alt="Student Learning" 
+                         class="w-full h-auto rounded-2xl floating object-contain">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <i class="fas fa-chevron-down text-2xl"></i>
+    </div>
+</section>
+
+    <!-- About Section -->
+     <!--
+    <section id="about" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-indigo-900 mb-4">Why Choose MARWAR?</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 mx-auto rounded"></div>
+            </div>
+            <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
+                <div class="lg:col-span-6 mb-12 lg:mb-0">
+                    <div class="relative">
+                        <div class="absolute -inset-4 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl"></div>
+                        <img src="https://scontent.fjdh1-4.fna.fbcdn.net/v/t39.30808-6/481472538_2075045412961330_9018114288317962711_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=cpIbct_BR4cQ7kNvwFE7-7t&_nc_oc=AdmgxEaX-F-bmOoPYwM-h3hL0r8hZqkMW_T8tB4BxUd45QG1bul43OeH4pURvQcnhqzpH1gVPE3Udr5w9CPg5wAc&_nc_zt=23&_nc_ht=scontent.fjdh1-4.fna&_nc_gid=IHgkOs3WLaZCvmXQgbluHw&oh=00_AfcW9yvhwK77MDBNFZMAf8VugAN33BHfh4Z1QKkDk6ib3w&oe=690A67FD" 
+                             alt="Classroom" class="relative rounded-2xl shadow-xl w-full">
+                    </div>
+                </div>
+                <div class="lg:col-span-6 space-y-8">
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-chalkboard-teacher text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Expert Faculty</h3>
+                                <p class="text-gray-600">20+ years of teaching experience with 95% success rate</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-chart-line text-violet-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Proven Results</h3>
+                                <p class="text-gray-600">1000+ students selected in govt jobs last year</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-clock text-cyan-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Flexible Batches</h3>
+                                <p class="text-gray-600">Morning, evening & weekend batches available</p>
+                            </div>
+                        </div>
+                    </div>
+                    <blockquote class="bg-gradient-to-r from-indigo-50 to-violet-50 p-6 rounded-xl border-l-4 border-indigo-500">
+                        <p class="text-gray-700 italic">"Marwar transformed my career. I cleared REET in first attempt!"</p>
+                        <cite class="mt-2 text-indigo-900 font-semibold">- Priya Sharma, REET Topper 2024</cite>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+    </section>
+-->
+    <!-- Statistics Section -->
+     <!--
+    <section id="courses" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-indigo-900 mb-4">Our Success Statistics</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 mx-auto rounded"></div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Students</h3>
+                    <p class="stats-counter text-4xl font-bold text-indigo-900 mb-1" data-target="5000">0</p>
+                    <p class="text-gray-600">Total Enrolled</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
+                    <div class="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-trophy text-violet-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Selections</h3>
+                    <p class="stats-counter text-4xl font-bold text-violet-600 mb-1" data-target="1200">0</p>
+                    <p class="text-gray-600">This Year</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
+                    <div class="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-star text-cyan-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Success Rate</h3>
+                    <p class="stats-counter text-4xl font-bold text-cyan-600 mb-1" data-target="95">0</p>
+                    <p class="text-gray-600">Percentage</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg card-hover text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Years</h3>
+                    <p class="stats-counter text-4xl font-bold text-indigo-900 mb-1" data-target="12">0</p>
+                    <p class="text-gray-600">Experience</p>
+                </div>
+            </div>
+        </div>
+    </section>
+   -->
+    <!-- Registration Form Section -->
+    <section id="register" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-indigo-900 mb-4">Student Registration</h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Complete the form below to join our premier coaching programs</p>
+                <div class="w-24 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 mx-auto rounded mt-4"></div>
+            </div>
+            
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden card-hover">
+                    <div class="hero-gradient text-white py-8 px-8">
+                        <h3 class="text-2xl font-bold flex items-center">
+                            <i class="fas fa-user-plus mr-3"></i>
+                            Registration Form
+                        </h3>
+                    </div>
+                    <form id="registrationForm" class="p-8">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Student Name *</label>
+                                <input type="text" id="name" required 
+                                       class="form-input w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none">
+                            </div>
+                            <div class="form-group">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Father's Name *</label>
+                                <input type="text" id="fatherName" required 
+                                       class="form-input w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none">
+                            </div>
+                            <div class="form-group md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Mobile Number *</label>
+                                <input type="tel" id="mobile" required pattern="[0-9]{10}" 
+                                       class="form-input w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none">
+                            </div>
+                            <div class="form-group md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Select Course *</label>
+                                <select id="batch" required class="form-input w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none">
+                                    <option value="" disabled selected>Select Course</option>
+                                    <option value="CET">CET - Common Entrance Test</option>
+                                    <option value="BSTC">BSTC - Basic School Teaching Certificate</option>
+                                    <option value="LDC">LDC - Lower Division Clerk</option>
+                                    <option value="PTET">PTET - Pre Teacher Education Test</option>
+                                    <option value="REET">REET - Rajasthan Eligibility Examination for Teachers</option>
+                                    <option value="All">All SUBJECT(Foundation Batch )</option>
+                                    <option value="GEOGRAPHY">Special Geography Batch</option>
+                                    <option value="2ndGrade">2nd Grade</option>
+                                    <option value="PTI">PTI - शारीरिक शिक्षक </option>
+                                    <option value="1stGradeGeo">1st Grade Geography</option>
+                                    <option value="LAB">Lab Assistent Geography</option>
+                                    <option value="HighCourt">High Court 4th Grade</option>
+                                    <option value="1stGradeGK">1st Grade frist paper - GK</option>
+                                    <option value="4thGrade">4th Grade Exam</option>
+                                    <option value="VDO">VDO - Village Development Officer</option>
+                                    <option value="PATWARI">Patwri</option>
+                                    <option value="DelhiPolice">Delhi Police</option>
+                                    <option value="RAJ-POLICE">Rajasthan Police</option>
+                                    <option value="RAILWAY">RAILWAY GROUP D</option>
+                                    <option value="RPF">RAILWAY RPF</option>
+                                    <option value="SSCGD">SCC GD</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 flex items-center space-x-3">
+                            <input type="checkbox" id="terms" required class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                            <label for="terms" class="text-sm font-medium text-gray-700 cursor-pointer">
+                                I agree to the <a href="#" class="text-indigo-600 hover:underline">Terms & Conditions</a> *
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white py-4 px-8 rounded-xl font-bold text-lg transition duration-300 flex items-center justify-center">
+                            <i class="fas fa-rocket mr-3 animate-pulse"></i>
+                            Register Now & Start Learning
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 success-animation">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-check text-green-600 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-3">Registration Successful!</h3>
+                <p class="text-gray-600 mb-8">Thank you for choosing Marwar. Our team will contact you within 24 hours.</p>
+                <div class="flex space-x-3">
+                    <button onclick="closeModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 py-3 rounded-xl font-medium transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Download Section -->
+<section id="app" class="py-20 bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-indigo-900 mb-4">Download Our Mobile App</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Get instant access to live classes, study material, tests & notifications – anytime, anywhere.
+            </p>
+            <div class="w-24 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 mx-auto rounded mt-4"></div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <!-- App Image - Centered -->
+            <div class="flex justify-center">
+                <div class="relative w-1/2 max-w-sm md:max-w-md lg:max-w-lg">
+                    <img src="app png.png"
+                         alt="Marwar Classes App"
+                         class="w-full h-auto rounded-2xl floating object-contain">
+                    
+                    <!-- Decorative Floating Orbs -->
+                    <div class="absolute -top-6 -left-6 w-20 h-20 bg-indigo-400/20 rounded-full animate-pulse"></div>
+                    <div class="absolute -bottom-6 -right-6 w-20 h-20 bg-violet-400/20 rounded-full animate-pulse delay-300"></div>
+                </div>
+            </div>
+
+            <!-- App Info & Download Buttons -->
+            <div class="space-y-8 flex flex-col justify-center">
+                <div class="bg-white p-8 rounded-2xl shadow-xl card-hover">
+                    <h3 class="text-2xl font-bold text-indigo-900 mb-4 flex items-center justify-center md:justify-start">
+                        <i class="fas fa-mobile-alt mr-3 text-indigo-600"></i>
+                        Marwar Classes Barmer
+                    </h3>
+                    <ul class="space-y-3 text-gray-700 text-center md:text-left">
+                        <li class="flex items-center justify-center md:justify-start">
+                            <i class="fas fa-check text-green-500 mr-2"></i> Live & recorded lectures
+                        </li>
+                        <li class="flex items-center justify-center md:justify-start">
+                            <i class="fas fa-check text-green-500 mr-2"></i> Daily quizzes & mock tests
+                        </li>
+                        <li class="flex items-center justify-center md:justify-start">
+                            <i class="fas fa-check text-green-500 mr-2"></i> PDF notes & assignments
+                        </li>
+                        <li class="flex items-center justify-center md:justify-start">
+                            <i class="fas fa-check text-green-500 mr-2"></i> Instant doubt clearing
+                        </li>
+                    </ul>
+
+                    <!-- Download Buttons -->
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        <a href="https://play.google.com/store/apps/details?id=co.ted.zkxpo&pcampaignid=web_share"
+                           target="_blank"
+                           class="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-semibold transition duration-300">
+                            <img src="playtore.png" alt="Get it on Google Play" class="h-6 mr-2">
+                            Get it on Google Play
+                        </a>
+
+                        <!-- Optional: Direct APK Download (Uncomment if needed) -->
+                        <!--
+                        <a href="YOUR_APK_LINK.apk"
+                           class="flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-xl font-semibold transition duration-300">
+                            <i class="fas fa-download mr-2"></i> Download APK
+                        </a>
+                        -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-indigo-900 mb-4">Get In Touch</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 mx-auto rounded"></div>
+            </div>
+            <div class="lg:grid lg:grid-cols-2 lg:gap-12">
+                <div class="bg-white rounded-2xl p-8 shadow-lg mb-8 lg:mb-0">
+                    <h3 class="text-2xl font-bold text-indigo-900 mb-6">Contact Information</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Address</h4>
+                                <p class="text-gray-600">ओम कंप्युटर के पीछे , राम नगर <br> बाड़मेर 344001  </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-phone text-violet-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Phone</h4>
+                                <p class="text-gray-600">
+                                    <a href="tel:+919468618443" class="hover:text-indigo-600">+91 9468618443 </a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-envelope text-cyan-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Email</h4>
+                                <p class="text-gray-600">
+                                    <a href="mailto:marwarclassesbmr@gmail.com" class="hover:text-indigo-600">marwarclassesbmr@gmail.com</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-bold text-indigo-900 mb-6">Quick Inquiry</h3>
+                    <form id="quickForm">
+                        <div class="grid grid-cols-1 gap-4">
+                            <input type="text" placeholder="Your Name" required 
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none">
+                            <input type="tel" placeholder="Mobile Number" required 
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none">
+                            <textarea placeholder="Your Message" rows="3" 
+                                      class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none"></textarea>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold">
+                                Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-indigo-900 to-violet-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                         <img src="marwarlogo.png" 
+                            alt="Marwar Logo" 
+                            class="w-8 h-8 mr-2 object-contain">
+
+                        <span class="text-xl font-bold text-white">MARWAR </span>
+                    </div>
+                    <p class="text-indigo-300">Empowering students since 2025 with quality education and guaranteed success.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-indigo-300">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-indigo-300 hover:text-white transition">Home</a></li>
+                        <li><a href="#app" class="text-indigo-300 hover:text-white transition">Download App</a></li>
+                        <li><a href="https://gchwnh.courses.store/" class="text-indigo-300 hover:text-white transition">Courses</a></li>
+                        <li><a href="#register" class="text-indigo-300 hover:text-white transition">Register</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-indigo-300">Courses</h3>
+                    <ul class="space-y-2">
+                        <li><a href="https://gchwnh.courses.store/749505?mainCategory=0&subCatList=%5B%5D" class="text-indigo-300 hover:text-white transition">CET</a></li>
+                        <li><a href="https://gchwnh.courses.store/749503?mainCategory=0&subCatList=%5B%5D" class="text-indigo-300 hover:text-white transition">REET</a></li>
+                        <li><a href="https://gchwnh.courses.store/632538?mainCategory=0&subCatList=%5B%5D" class="text-indigo-300 hover:text-white transition">LAB ASSISTANT</a></li>
+                        <li><a href="https://gchwnh.courses.store/671478?mainCategory=0&subCatList=%5B%5D&filterId=1&sortId=7" class="text-indigo-300 hover:text-white transition">BSTC</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-indigo-300">Follow Us</h3>
+                    <div class="flex space-x-4 mb-4">
+                        <a href="https://www.facebook.com/pannaram.lukha/" class="w-12 h-12 bg-indigo-800 hover:bg-indigo-700 rounded-full flex items-center justify-center transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://www.instagram.com/pannaram_choudhary_res/" class="w-12 h-12 bg-indigo-800 hover:bg-indigo-700 rounded-full flex items-center justify-center transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@MarwadclassestBarmer" class="w-12 h-12 bg-indigo-800 hover:bg-indigo-700 rounded-full flex items-center justify-center transition">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="https://t.me/marwadclassesbarmer" class="w-12 h-12 bg-indigo-800 hover:bg-indigo-700 rounded-full flex items-center justify-center transition">
+                            <i class="fab fa-telegram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+           <!-- Copyright & Designer Credit -->
+        <div class="border-t border-indigo-800 mt-12 pt-8 text-center text-indigo-300">
+            <p>© 2025 मारवाड़ शिक्षण एवं शोध संस्थान बाड़मेर . All Rights Reserved.</p>
+            <p class="mt-2 text-sm">
+                Designed with <span class="text-red-500">❤️</span> By 
+                <a href="https://naresh-choudhree.vercel.app/" 
+                   target="_blank" 
+                   class="font-medium text-white hover:text-yellow-300 underline transition">
+                   Naresh Choudhary
+                </a>
+            </p>
+        </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="fixed bottom-8 right-8 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg opacity-0 invisible transition-all duration-300 z-40">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+                apiKey: "AIzaSyDohmr8V0NWoIr1VDH0thIM_-dtOHWgVKc",
+                authDomain: "marwar-bmr.firebaseapp.com",
+                projectId: "marwar-bmr",
+                storageBucket: "marwar-bmr.firebasestorage.app",
+                messagingSenderId: "35705137468",
+                appId: "1:35705137468:web:1fd698f50e45b71548d639",
+                measurementId: "G-QP0JMK9Z48"
+                };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Back to top button
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.remove('opacity-0', 'invisible');
+                backToTop.classList.add('opacity-100', 'visible');
+            } else {
+                backToTop.classList.add('opacity-0', 'invisible');
+                backToTop.classList.remove('opacity-100', 'visible');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Counter animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stats-counter');
+            const animateCounter = (counter) => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const increment = target / 100;
+                let current = 0;
+                
+                const updateCounter = () => {
+                    if (current < target) {
+                        current += increment;
+                        counter.textContent = Math.floor(current) + (target === 95 ? '%' : '');
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target + (target === 95 ? '%' : '');
+                    }
+                };
+                updateCounter();
+            };
+
+            counters.forEach(counter => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            animateCounter(counter);
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                });
+                observer.observe(counter);
+            });
+        }
+
+        // Registration Form
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = e.target.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            button.disabled = true;
+
+            const formData = {
+                name: document.getElementById('name').value,
+                fatherName: document.getElementById('fatherName').value,
+                mobile: document.getElementById('mobile').value,
+                batch: document.getElementById('batch').value,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('students').add(formData);
+                
+                // Reset form
+                e.target.reset();
+                
+                // Show success modal
+                document.getElementById('successModal').classList.remove('hidden');
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Registration failed. Please try again.");
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        });
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        // Quick inquiry form
+        document.getElementById('quickForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            // WhatsApp integration
+            const phone = e.target.querySelector('input[type="tel"]').value;
+            const message = `Quick Inquiry from Marwar Website!\nName: ${e.target.querySelector('input[type="text"]').value}\nMessage: ${e.target.querySelector('textarea').value}`;
+            window.open(`https://wa.me/+919468618443?text=${encodeURIComponent(message)}`, '_blank');
+            e.target.reset();
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            animateCounters();
+            setTimeout(() => {
+                document.querySelector('.hero-gradient').classList.add('animate-fadeIn');
+            }, 100);
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-lg');
+            } else {
+                nav.classList.remove('shadow-lg');
+            }
+        });
+    </script>
+</body>
+</html>
